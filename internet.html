@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Internet Segura & IoT</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Roboto', sans-serif; background:#f7f7f7; color:#333; scroll-behavior:smooth; }
+
+/* Barra superior */
+header { width:100%; background:#000; color:white; padding:15px 30px; position:fixed; top:0; left:0; z-index:1000; display:flex; align-items:center; justify-content:space-between; }
+.left { display:flex; align-items:center; position:relative; }
+.left .contacto { background:#1a73e8; color:white; font-weight:bold; padding:8px 12px; border-radius:50px; cursor:pointer; font-size:14px; }
+
+/* Email popup */
+.email-bar { position:absolute; top:50px; left:0; background:#000; color:white; padding:8px 12px; border-radius:6px; font-size:14px; display:none; box-shadow:0 2px 8px rgba(0,0,0,0.3); }
+
+.right { display:flex; align-items:center; position:relative; }
+.right .menu-icon { font-size:28px; cursor:pointer; color:white; }
+
+/* Overlay do menu */
+.menu-overlay {
+  position: fixed;
+  top:0; left:0; width:100%; height:100%;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  opacity:0; visibility:hidden;
+  transition:0.4s ease;
+  z-index:1000;
+}
+.menu-overlay.show { opacity:1; visibility:visible; }
+
+/* Menu lateral */
+.menu-container {
+  position: fixed;
+  top:0; right:-100%;
+  width:75%; max-width:400px; height:100%;
+  background:#111;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  transition: right 0.5s ease;
+  z-index:1001;
+}
+.menu-container.show { right:0; }
+
+.menu-close { position:absolute; top:18px; right:18px; font-size:38px; color:white; cursor:pointer; }
+
+/* Links do menu - sem cor de destaque */
+.menu a {
+  color: #fff; text-decoration:none; font-size:30px; font-weight:700; text-align:center;
+  width:100%; padding:22px 0; opacity:0; transform:translateX(50px);
+  border-top:2px solid #444;
+  transition: transform 0.4s, opacity 0.4s;
+}
+.menu a:first-of-type { border-top:none; }
+.menu a.show-link { opacity:1; transform:translateX(0); }
+/* Removido destaque ativo */
+/*.menu a.active { background: #1a73e8; }*/
+
+/* Espaço topo */
+.top-space { height:70px; }
+
+/* Hero/banner */
+.hero { margin-top:70px; height:60vh; background:#000; display:flex; align-items:center; justify-content:center; text-align:center; color:white; position:relative; overflow:hidden; }
+.hero-content { position:relative; z-index:1; opacity:0; transform:translateY(30px); animation: fadeInUp 1.5s forwards; }
+.hero h1 { font-size:48px; margin-bottom:15px; }
+.hero p { font-size:20px; }
+@keyframes fadeInUp { to { opacity:1; transform:translateY(0); } }
+
+/* Seções */
+section { padding:60px 20px; max-width:1000px; margin:auto; background:white; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,0.1); margin-bottom:30px; opacity:0; transform: translateY(50px); transition:0.8s ease; }
+section.visible { opacity:1; transform: translateY(0); }
+section h2 { font-size:28px; margin-bottom:12px; color:#000; text-align:center; }
+section p { font-size:18px; line-height:1.8; margin-bottom:12px; text-align:justify; }
+
+/* Cards */
+.subtheme { display:flex; gap:20px; flex-wrap:wrap; margin-top:20px; justify-content:center; }
+.subtheme .card { flex:1; min-width:260px; background:#fafafa; padding:20px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1); transition: transform 0.5s, box-shadow 0.5s, opacity 0.5s; cursor:pointer; text-align:center; opacity:0; transform: translateY(30px); }
+.subtheme .card.show { opacity:1; transform:translateY(0); }
+.subtheme .card i { font-size:40px; color:#1a73e8; margin-bottom:12px; }
+.subtheme .card h3 { font-size:22px; margin-bottom:8px; }
+.subtheme .card p { font-size:16px; line-height:1.6; text-align:justify; }
+
+/* Botão topo */
+#topBtn { display:none; position:fixed; bottom:30px; right:30px; background:#000; color:white; border:none; padding:12px 18px; border-radius:8px; font-size:16px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.2); transition:0.3s; }
+#topBtn:hover { background:#222; }
+
+/* Rodapé */
+footer { background:#111; color:white; padding:30px 20px; text-align:center; }
+footer hr { border:none; height:2px; background:#1a73e8; margin:20px 0; }
+.footer-cols { display:flex; justify-content:space-around; flex-wrap:wrap; gap:20px; }
+.footer-cols div { flex:1; min-width:150px; }
+.footer-cols h4 { margin-bottom:10px; }
+.footer-cols p { font-size:14px; }
+
+@media(max-width:768px){
+    .subtheme{ flex-direction:column; }
+    .footer-cols { flex-direction:column; align-items:center; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="left">
+    <div class="contacto" onclick="toggleEmail()">Contacto</div>
+    <div class="email-bar" id="emailBar">exemplo@escola.pt</div>
+  </div>
+  <div class="right">
+    <i class="fas fa-bars menu-icon" onclick="toggleMenu()"></i>
+  </div>
+</header>
+
+<!-- Overlay + Menu -->
+<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+<div class="menu-container" id="menu">
+  <i class="fas fa-times menu-close" onclick="toggleMenu()"></i>
+  <a href="#inicio">Início</a>
+  <a href="#iot">IoT</a>
+  <a href="#internet-segura">Internet Segura</a>
+  <a href="#subtemas">Sub‑temas</a>
+  <a href="#cyberbullying">Cyberbullying</a>
+</div>
+
+<div class="top-space"></div>
+
+<!-- Hero -->
+<div class="hero" id="inicio">
+  <div class="hero-content">
+    <h1>Internet Segura & IoT</h1>
+    <p>Conectando tecnologia com segurança digital no dia a dia</p>
+  </div>
+</div>
+
+<!-- Seções com textos completos -->
+<section id="iot">
+  <h2>O que é Internet das Coisas</h2>
+  <div class="subtheme">
+    <div class="card fade-up">
+      <i class="fas fa-network-wired"></i>
+      <h3>Conceito</h3>
+      <p>A Internet das Coisas (IoT) refere-se à interconexão de objetos e dispositivos através da internet, permitindo que coletem e troquem dados para facilitar tarefas cotidianas e otimizar processos.</p>
+      <p>Dispositivos conectados incluem câmeras, sensores, eletrodomésticos e veículos. Embora ofereça benefícios, a IoT traz desafios de segurança, exigindo atenção à proteção de dados e redes para evitar ataques cibernéticos.</p>
+      <p>Implementar boas práticas, como senhas fortes, atualizações regulares e controle de acesso, é essencial para manter a integridade dos dispositivos e a segurança dos usuários.</p>
+    </div>
+  </div>
+</section>
+
+<section id="internet-segura">
+  <h2>Internet Segura</h2>
+  <div class="subtheme">
+    <div class="card fade-up">
+      <i class="fas fa-user-shield"></i>
+      <h3>Privacidade de Dados</h3>
+      <p>Proteja informações pessoais, configure permissões corretamente e evite compartilhar dados sensíveis em redes públicas ou não confiáveis.</p>
+    </div>
+    <div class="card fade-up">
+      <i class="fas fa-key"></i>
+      <h3>Senhas Fortes</h3>
+      <p>Crie senhas complexas, utilize gerenciadores de senha e habilite autenticação em dois fatores sempre que possível.</p>
+    </div>
+    <div class="card fade-up">
+      <i class="fas fa-wifi"></i>
+      <h3>Conexões Seguras</h3>
+      <p>Prefira sempre HTTPS e redes confiáveis, evitando conexões abertas ou suspeitas que possam comprometer dados.</p>
+    </div>
+  </div>
+</section>
+
+<section id="subtemas">
+  <h2>Mais Sobre Segurança Online</h2>
+  <div class="subtheme">
+    <div class="card fade-up"><i class="fas fa-fish"></i><h3>Phishing</h3><p>Golpes que tentam enganar usuários para obter informações sensíveis, como senhas e dados bancários. Sempre verifique remetentes e links antes de clicar.</p></div>
+    <div class="card fade-up"><i class="fas fa-shield-virus"></i><h3>Antivírus e Firewalls</h3><p>Ferramentas essenciais para proteger computadores e dispositivos móveis de malwares, vírus e ataques cibernéticos.</p></div>
+    <div class="card fade-up"><i class="fas fa-user-check"></i><h3>Comportamento Seguro</h3><p>Evite clicar em links suspeitos, baixe arquivos somente de fontes confiáveis e mantenha softwares sempre atualizados.</p></div>
+  </div>
+</section>
+
+<section id="cyberbullying">
+  <h2>Cyberbullying</h2>
+  <div class="subtheme">
+    <div class="card fade-up"><i class="fas fa-comment-slash"></i><h3>Definição</h3><p>Cyberbullying é o uso da tecnologia para assediar, humilhar ou ameaçar alguém online. Pode ocorrer em redes sociais, aplicativos de mensagens e plataformas de jogos.</p></div>
+    <div class="card fade-up"><i class="fas fa-hand-holding-heart"></i><h3>Prevenção</h3><p>Para combater, é importante educar sobre comportamentos digitais respeitosos, denunciar conteúdos abusivos e buscar apoio de pais, professores e plataformas.</p></div>
+    <div class="card fade-up"><i class="fas fa-users"></i><h3>Impacto</h3><p>Adotar medidas preventivas e conscientização contínua ajuda a criar um ambiente digital mais seguro e saudável para todos os usuários.</p></div>
+  </div>
+</section>
+
+<!-- Rodapé -->
+<footer>
+  <hr>
+  <div class="footer-cols">
+    <div><h4>Contacto</h4><p>Telefone: 123-456-789</p></div>
+    <div><h4>Email</h4><p>exemplo@escola.pt</p></div>
+    <div><h4>Redes Sociais</h4><p>Facebook | Instagram | Twitter</p></div>
+  </div>
+</footer>
+
+<button id="topBtn" onclick="topFunction()">Topo</button>
+
+<script>
+// Botão topo
+const topBtn = document.getElementById("topBtn");
+window.onscroll = () => { topBtn.style.display = (window.scrollY > 300) ? "block" : "none"; };
+function topFunction() { window.scrollTo({top:0, behavior:'smooth'}); }
+
+// Scroll reveal
+const sections = document.querySelectorAll("section");
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => { if(entry.isIntersecting){ entry.target.classList.add("visible"); } });
+}, { threshold:0.2 });
+sections.forEach(section => observer.observe(section));
+
+const fadeCards = document.querySelectorAll('.fade-up');
+const cardObserver = new IntersectionObserver(entries => {
+  entries.forEach((entry,index) => { if(entry.isIntersecting){ setTimeout(()=>{ entry.target.classList.add('show'); }, index*150); } });
+}, { threshold:0.2 });
+fadeCards.forEach(card => cardObserver.observe(card));
+
+// Toggle menu lateral
+function toggleMenu(){
+  const menu = document.getElementById('menu');
+  const overlay = document.getElementById('menuOverlay');
+  menu.classList.toggle('show');
+  overlay.classList.toggle('show');
+
+  const links = menu.querySelectorAll('a');
+  links.forEach((link,i)=>{
+    setTimeout(()=>{ link.classList.toggle('show-link'); }, i*150);
+  });
+}
+
+// Toggle email
+function toggleEmail(){
+  const bar = document.getElementById('emailBar');
+  bar.style.display = (bar.style.display==='block')?'none':'block';
+}
+
+// Smooth scroll
+const menuLinks = document.querySelectorAll('.menu a');
+menuLinks.forEach(link=>{
+  link.addEventListener('click', e=>{
+    e.preventDefault();
+    const target = document.querySelector(link.getAttribute('href'));
+    target.scrollIntoView({behavior:'smooth'});
+    toggleMenu();
+  });
+});
+</script>
+
+</body>
+</html>
